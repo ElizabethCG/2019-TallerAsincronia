@@ -1,6 +1,19 @@
-doge.updatePosition = () => {
-  // Velar porque doge no haga colisionado con cates
+doge.lifes = 300;
+doge.turns = 0;
 
+doge.updateLifes = (lifeLost) => {
+  // Velar porque doge tenga vidas
+  doge.lifes = doge.lifes - lifeLost;
+  if(doge.lifes <= 0){
+    doge.gameOver();
+  }
+
+  lifes.innerHTML = doge.lifes;
+}
+
+doge.updateTurns = () => {
+  doge.turns = doge.turns+1;
+  turns.innerHTML = doge.turns;
 }
 
 doge.gameOver = (cateMessage) => {
@@ -9,41 +22,49 @@ doge.gameOver = (cateMessage) => {
   alert("Cate ha dicho : "+cateMessage);
 }
 
-cate1.cateUpdatePosition = (gameOver) => {
-  const cateTop = parseInt(cate1.style.top);
-  const cateLeft = parseInt(cate1.style.left);
-  const dogeTop = parseInt(doge.style.top);
-  const dogeLeft = parseInt(doge.style.left);
+cate1.cateUpdatePosition = () => {
+  return new Promise((resolve, reject) => {
+    const cateTop = parseInt(cate1.style.top);
+    const cateLeft = parseInt(cate1.style.left);
+    const dogeTop = parseInt(doge.style.top);
+    const dogeLeft = parseInt(doge.style.left);
 
-  if(cateTop + 100 > dogeTop && cateTop < dogeTop + 100 &&
-    cateLeft + 100 > dogeLeft && cateLeft < dogeLeft + 100){
-      gameOver("Muajajajajaja");
+    if(cateTop + 100 > dogeTop && cateTop < dogeTop + 100 &&
+      cateLeft + 100 > dogeLeft && cateLeft < dogeLeft + 100){
+        resolve(1);
+      }else{
+        resolve(0);
+      }
+    
+    if(Math.random() >= 0.5){
+      const sign = (cateTop - dogeTop)/Math.abs(cateTop - dogeTop);
+      cate1.style.top = parseInt(cate1.style.top) - 20*sign;
+    }else{
+      const sign = (cateLeft - dogeLeft)/Math.abs(cateLeft - dogeLeft);
+      cate1.style.left = parseInt(cate1.style.left) - 20*sign;
     }
-  
-  if(Math.random() >= 0.5){
-    const sign = (cateTop - dogeTop)/Math.abs(cateTop - dogeTop);
-    cate1.style.top = parseInt(cate1.style.top) - 20*sign;
-  }else{
-    const sign = (cateLeft - dogeLeft)/Math.abs(cateLeft - dogeLeft);
-    cate1.style.left = parseInt(cate1.style.left) - 20*sign;
-  }
+  });
 }
 
-cate2.cateUpdatePosition = (gameOver) => {
-  const cateTop = parseInt(cate2.style.top);
-  const cateLeft = parseInt(cate2.style.left);
-  const dogeTop = parseInt(doge.style.top);
-  const dogeLeft = parseInt(doge.style.left);
+cate2.cateUpdatePosition = () => {
+  return new Promise((resolve, reject) => {
+    const cateTop = parseInt(cate2.style.top);
+    const cateLeft = parseInt(cate2.style.left);
+    const dogeTop = parseInt(doge.style.top);
+    const dogeLeft = parseInt(doge.style.left);
 
-  if(cateTop + 100 > dogeTop && cateTop < dogeTop + 100 &&
-    cateLeft + 100 > dogeLeft && cateLeft < dogeLeft + 100){
-      gameOver("Ups, perdón doge, pero te maté");
-    }
+    if(cateTop + 100 > dogeTop && cateTop < dogeTop + 100 &&
+      cateLeft + 100 > dogeLeft && cateLeft < dogeLeft + 100){
+        resolve(3);
+      }else{
+        resolve(0)
+      }
 
     const signTop = (cateTop - dogeTop)/Math.abs(cateTop - dogeTop);
     cate2.style.top = parseInt(cate2.style.top) - 10*signTop;
     const signLeft = (cateLeft - dogeLeft)/Math.abs(cateLeft - dogeLeft);
     cate2.style.left = parseInt(cate2.style.left) - 10*signLeft;
+  });
 }
 
 document.onkeydown = (event) => {
@@ -54,6 +75,18 @@ document.onkeydown = (event) => {
     case 40: doge.style.top = 25 + parseInt(doge.style.top);break;//DOWN
   }
 
-  cate1.cateUpdatePosition(doge.gameOver);
+  const laPromesa = cate1.cateUpdatePosition();
+  const laOtraPromesa = cate2.cateUpdatePosition();
+  Promise.all([laPromesa, laOtraPromesa])
+    .then(([lifeLost1, lifeLost2])=>{
+      doge.updateLifes(lifeLost1);
+      doge.updateLifes(lifeLost2);
+    })
+    .catch((error)=>{
+      console.error("Error > "+error);
+    })
+    .finally(()=>{
+      doge.updateTurns();
+    });
   cate2.cateUpdatePosition(doge.gameOver);
 }
